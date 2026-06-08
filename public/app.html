@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumine Faturas</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<aside class="sidebar">
+<img src="/assets/logo_lumine.png" class="side-logo">
+<h2>Lumine Faturas</h2>
+<nav>
+<a href="#faturas">Faturas</a>
+<a href="#aparelhos">Aparelhos</a>
+<a href="#rotina">Rotina IA</a>
+<a href="#camera">Câmera</a>
+<a href="#busca">Busca IA</a>
+<a href="#pdf">Fatura PDF</a>
+<a href="#diagnostico">Diagnóstico</a>
+</nav>
+<div class="user-box"><strong id="usuarioNome"></strong><span id="usuarioEmail"></span><button onclick="sair()">Sair</button></div>
+</aside>
+
+<main class="main">
+<header class="hero">
+<div>
+<h1>Lumine Faturas</h1>
+<p>Cálculo de faturas, consumo, demanda recomendada e diagnóstico com IA.</p>
+</div>
+<button onclick="window.print()">Salvar PDF</button>
+</header>
+
+
+
+<section id="faturas" class="card">
+<h2>1. Simulador de Tarifa Ideal</h2>
+<p class="note">Informe os aparelhos. O sistema compara as modalidades e mostra a tarifa mais adequada. Os campos técnicos aparecem somente quando a modalidade selecionada exigir.</p>
+
+<div class="grid">
+<label>Cliente<input id="cliente" placeholder="Ex.: Residência João"></label>
+<label>Cidade/UF<input id="cidade" value="Belém - PA"></label>
+<label>Concessionária<input id="concessionaria" value="Equatorial Pará"></label>
+
+<label>Tipo de cliente<select id="tipoCliente" onchange="calcular()">
+<option value="residencial">Residencial</option>
+<option value="comercial">Comercial</option>
+<option value="empresarial">Empresarial</option>
+<option value="industrial">Industrial</option>
+</select></label>
+
+<label>Tarifa para simular<select id="tarifaSelecionada" onchange="alternarCamposTarifa();calcular()">
+<option value="auto">Automático: recomendar melhor tarifa</option>
+<option value="convencional">Grupo B Convencional</option>
+<option value="branca">Grupo B Tarifa Branca</option>
+<option value="verde">Grupo A Verde</option>
+<option value="azul">Grupo A Azul</option>
+</select></label>
+
+<label>CIP R$<input id="cip" type="number" step="0.01" value="0"></label>
+</div>
+
+<div id="camposGrupoB" class="subbox">
+<h3>Grupo B — tarifas e impostos</h3>
+<p class="note">Para Grupo B, informe apenas tarifa final, TUSD e impostos. O consumo vem dos aparelhos cadastrados abaixo.</p>
+<div class="grid">
+<label>Tarifa final Convencional R$/kWh<input id="tarifaFinal" type="number" step="0.000001" value="1.25813"></label>
+<label>TUSD R$/kWh<input id="tusdGrupoB" type="number" step="0.00001" value="0.45516"></label>
+<label>PIS %<input id="pis" type="number" step="0.01" value="0.7134"></label>
+<label>COFINS %<input id="cofins" type="number" step="0.01" value="3.2894"></label>
+<label>ICMS %<input id="icmsManual" type="number" step="0.01" value="19.00"></label>
+<label>Outros R$<input id="outros" type="number" step="0.01" value="0"></label>
+</div>
+</div>
+
+<div id="camposTarifaBranca" class="subbox hidden">
+<h3>Tarifa Branca — Grupo B</h3>
+<p class="note">Esses campos aparecem somente quando você seleciona Tarifa Branca ou Automático.</p>
+<div class="grid">
+<label>Tarifa Branca Ponta R$/kWh<input id="tarifaBrancaPonta" type="number" step="0.00001" value="2.08106"></label>
+<label>Tarifa Branca Intermediário R$/kWh<input id="tarifaBrancaIntermediario" type="number" step="0.00001" value="1.34769"></label>
+<label>Tarifa Branca Fora Ponta R$/kWh<input id="tarifaBrancaForaPonta" type="number" step="0.00001" value="0.78396"></label>
+</div>
+</div>
+
+<div id="camposGrupoA" class="subbox hidden">
+<h3>Grupo A — demanda e modalidade tarifária</h3>
+<p class="note">Esses campos aparecem somente ao selecionar Grupo A Verde/Azul ou Automático. Você também pode enviar uma fatura para diagnóstico por IA.</p>
+<div class="grid">
+<label>Tarifa Grupo A Verde R$/kWh<input id="tarifaVerde" type="number" step="0.00001" value="0.78396"></label>
+<label>Tarifa Grupo A Azul Fora Ponta R$/kWh<input id="tarifaAzulFora" type="number" step="0.00001" value="0.78396"></label>
+<label>Tarifa Grupo A Azul Ponta R$/kWh<input id="tarifaAzulPonta" type="number" step="0.00001" value="2.08106"></label>
+<label>Demanda contratada atual kW<input id="demandaContratadaAtual" type="number" step="0.01" value="0"></label>
+<label>Demanda medida na fatura kW<input id="demandaMedidaAtual" type="number" step="0.01" value="0"></label>
+<label>Valor fatura atual R$<input id="valorFaturaAtual" type="number" step="0.01" value="0"></label>
+</div>
+
+<div class="search-row">
+<input id="pdfFaturaGrupoA" type="file" accept="application/pdf">
+<button onclick="extrairFaturaPDFGrupoA()">Analisar fatura Grupo A com IA</button>
+</div>
+<div id="resultadoPDFGrupoA" class="search-results"></div>
+</div>
+
+<div class="subbox">
+<h3>Como usar</h3>
+<p>Cadastre os aparelhos abaixo com potência, tempo de uso e horário. O sistema calcula o consumo, estima demanda simultânea e compara as tarifas. Para Grupo A, a IA pode analisar a fatura e dizer se a demanda contratada está alta, baixa ou adequada.</p>
+</div>
+
+<button onclick="calcular()">Comparar tarifas</button>
+<div id="resultado" class="results"></div>
+<div id="comparativoTarifas" class="ranking"></div>
+<div id="panoramaGrupoA" class="ia-box"></div>
+</section>
+
+<section id="aparelhos" class="card">
+<h2>2. Aparelhos elétricos</h2>
+<div class="add-row">
+<select id="aparelhoSelect"></select>
+<button onclick="adicionarAparelho()">Adicionar aparelho</button>
+<button onclick="calcularAparelhoSelecionado()">Calcular aparelho</button>
+<button onclick="calcularDemanda()">Calcular demanda</button>
+<button class="btn-secondary" onclick="limparAparelhos()">Limpar lista</button>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Aparelho</th><th>Qtd.</th><th>Potência W</th><th>Horas/dia</th><th>Dias/mês</th><th>Início</th><th>Fim</th><th>kWh/mês</th><th></th></tr></thead>
+<tbody id="listaAparelhos"></tbody>
+</table>
+</div>
+<div id="resultadoAparelho" class="ia-box"></div>
+<div id="ranking" class="ranking"></div>
+</section>
+
+<section id="rotina" class="card ia-card">
+<h2>3. Cálculos com IA por rotina</h2>
+<textarea id="descricaoRotina" placeholder="Descreva sua rotina..."></textarea>
+<div class="search-row">
+<button id="botaoVoz" onclick="alternarVoz()">🎙️ Ativar áudio</button>
+<button onclick="estimarRotinaIA()">Estimar pela rotina</button>
+<button class="btn-secondary" onclick="adicionarTodosDaRotina()">Adicionar todos</button>
+</div>
+<div id="resultadoRotina" class="search-results"></div>
+</section>
+
+<section id="camera" class="card ia-card">
+<h2>4. Câmera e foto</h2>
+<div class="search-row">
+<input id="fotoArquivo" type="file" accept="image/*">
+<button onclick="abrirCamera()">Abrir câmera</button>
+<button onclick="capturarFoto()">Capturar foto</button>
+<button onclick="analisarFotoArquivo()">Reconhecer aparelho</button>
+</div>
+<video id="videoCamera" class="camera hidden" autoplay playsinline></video>
+<canvas id="canvasFoto" class="camera hidden"></canvas>
+<div id="resultadoFoto" class="search-results"></div>
+</section>
+
+<section id="busca" class="card ia-card">
+<h2>5. Busca de aparelho com IA</h2>
+<div class="search-row">
+<input id="buscaAparelho" placeholder="Buscar aparelho, carro elétrico ou equipamento...">
+<button onclick="buscarAparelhoIA()">Buscar com IA</button>
+</div>
+<div id="resultadoBusca" class="search-results"></div>
+</section>
+
+<section id="pdf" class="card ia-card">
+<h2>6. Organizar fatura PDF com IA</h2>
+<p class="note">Envie uma fatura do Grupo A. A IA retorna um panorama direto: se a demanda contratada está alta, baixa ou adequada, e se vale redistribuir consumo.</p>
+<div class="search-row">
+<input id="pdfFatura" type="file" accept="application/pdf">
+<button onclick="extrairFaturaPDF()">Organizar fatura PDF</button>
+</div>
+<div id="resultadoPDF" class="search-results"></div>
+<div id="downloadsPDF" class="download-row hidden">
+<a href="/download/fatura.xlsx">Baixar Excel</a>
+<a href="/download/fatura.csv">Baixar CSV</a>
+<a href="/download/fatura.pdf">Baixar PDF</a>
+</div>
+</section>
+
+<section id="diagnostico" class="card result-card">
+<h2>7. Diagnóstico Luminê</h2>
+<button onclick="salvarDiagnostico()">Salvar diagnóstico</button>
+<button onclick="gerarDiagnosticoIA()">Gerar diagnóstico com IA</button>
+<div id="diagnosticoIA" class="ia-box"></div>
+</section>
+</main>
+<script src="/auth.js"></script>
+<script src="/script.js"></script>
+</body>
+</html>
