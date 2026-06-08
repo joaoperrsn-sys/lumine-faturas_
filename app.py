@@ -331,14 +331,10 @@ def pdf_bytes(rows):
 class H(BaseHTTPRequestHandler):
     def do_GET(self):
         routes = {
-            "/": "index.html",
-            "/index.html": "index.html",
-            "/login.html": "login.html",
-            "/cadastro.html": "cadastro.html",
-            "/app.html": "app.html",
-            "/style.css": "style.css",
-            "/auth.js": "auth.js",
-            "/script.js": "script.js",
+    "/": "login.html",
+    "": "login.html",
+    "/index.html": "login.html",
+    "/login.html": "login.html",
         }
         ctypes = {"html": "text/html; charset=utf-8", "css": "text/css; charset=utf-8", "js": "application/javascript; charset=utf-8"}
 
