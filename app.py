@@ -338,9 +338,13 @@ class H(BaseHTTPRequestHandler):
         }
         ctypes = {"html": "text/html; charset=utf-8", "css": "text/css; charset=utf-8", "js": "application/javascript; charset=utf-8"}
 
-        if self.path == "/assets/logo_lumine.png":
-            p = ASSETS / "logo_lumine.png"
-            return send_bytes(self, p.read_bytes() if p.exists() else b"", "image/png")
+        if self.path in routes:
+    fn = routes[self.path]
+    ext = fn.split(".")[-1]
+    p = PUBLIC / fn
+    if p.exists():
+        return send_bytes(self, p.read_bytes(), ctypes.get(ext, "text/plain"))
+    return send_bytes(self, f"Arquivo não encontrado: {p}".encode("utf-8"), "text/plain", status=404)
 
         rows = (ULTIMA_FATURA or {}).get("linhas", [])
         if self.path == "/download/fatura.xlsx":
