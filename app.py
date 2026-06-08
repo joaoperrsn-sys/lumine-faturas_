@@ -411,4 +411,5 @@ if __name__ == "__main__":
     print("Lumine Faturas")
     print("Servidor: http://127.0.0.1:8000")
     print("Cálculos com IA opcionais: configure OPENAI_API_KEY")
-    HTTPServer(("127.0.0.1", 8000), H).serve_forever()
+    PORT = int(os.environ.get("PORT", 8000))
+HTTPServer(("0.0.0.0", PORT), H).serve_forever()
